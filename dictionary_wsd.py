@@ -5,6 +5,7 @@
 
 import nltk
 from nltk.corpus import stopwords
+from nltk.corpus import wordnet
 import string
 import re
 
@@ -36,12 +37,25 @@ def get_context_words(line,n,lines1):
     important_words2 = filter(lambda x: x not in stopwords.words('english'), temp_l2)
     important_words2 = filter(lambda x: x not in lines1, important_words2)
     
-    temp_words1 = important_words1[len(important_words1)-n:]
+    important_words1 = nltk.pos_tag(important_words1)
+    important_words2 = nltk.pos_tag(important_words2)
+
+    if len(important_words1) > n:
+        temp_words1 = important_words1[len(important_words1)-n:]
+    else:
+        temp_words1 = important_words1
     temp_words2 = important_words2[:n]
     
-    print(temp_words1)
-    print(temp_words2)
+    senses = []
+    '''wnl = nltk.WordNetLemmatizer
+    for t in temp_words1:
+        #senses.append(wordnet.Synset())
+        senses.append(wordnet.synset('dog.n.01'))'''
+    dog = wordnet.synset('dog.n.01')
+    hyp = lambda s:s.hypernyms()
+    print(list(dog.closure(hyp)));
     
+    #print(senses)
     return ''
 
 '''
