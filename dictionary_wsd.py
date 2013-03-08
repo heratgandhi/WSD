@@ -53,21 +53,20 @@ def get_context_words(line,n,lines1):
     
     for t in temp_words1:
         try:
-            if 'NN' in t[1]:
-                senses.append(wordnet.synsets(t[0]))
-            elif 'VB' in t[1]:
+            if 'VB' in t[1]:
                 senses.append(wordnet.synsets(lmtzr.lemmatize(t[0],'v')))
+            else:
+                senses.append(wordnet.synsets(t[0]))
         except:
             print('Ignored: '+t[0])
             pass
         
     for t in temp_words2:
-        #senses.append(wordnet.synset())
         try:
-            if 'NN' in t[1]:
-                senses.append(wordnet.synsets(t[0]))
-            elif 'VB' in t[1]:
+            if 'VB' in t[1]:
                 senses.append(wordnet.synsets(lmtzr.lemmatize(t[0],'v')))
+            else:
+                senses.append(wordnet.synsets(t[0]))
         except:
             print('Ignored:' + t[0])
             pass    
