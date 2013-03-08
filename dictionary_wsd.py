@@ -6,6 +6,8 @@
 import nltk
 from nltk.corpus import stopwords
 from nltk.corpus import wordnet
+from nltk.stem.wordnet import WordNetLemmatizer
+from nltk.corpus import WordNetCorpusReader as wn
 import string
 import re
 
@@ -47,15 +49,33 @@ def get_context_words(line,n,lines1):
     temp_words2 = important_words2[:n]
     
     senses = []
-    '''wnl = nltk.WordNetLemmatizer
-    for t in temp_words1:
-        #senses.append(wordnet.Synset())
-        senses.append(wordnet.synset('dog.n.01'))'''
-    dog = wordnet.synset('dog.n.01')
-    hyp = lambda s:s.hypernyms()
-    print(list(dog.closure(hyp)));
+    lmtzr = WordNetLemmatizer()
     
-    #print(senses)
+    for t in temp_words1:
+        try:
+            if 'NN' in t[1]:
+                senses.append(wordnet.synsets(t[0]))
+            elif 'VB' in t[1]:
+                senses.append(wordnet.synsets(lmtzr.lemmatize(t[0],'v')))
+        except:
+            print('Ignored: '+t[0])
+            pass
+        
+    for t in temp_words2:
+        #senses.append(wordnet.synset())
+        try:
+            if 'NN' in t[1]:
+                senses.append(wordnet.synsets(t[0]))
+            elif 'VB' in t[1]:
+                senses.append(wordnet.synsets(lmtzr.lemmatize(t[0],'v')))
+        except:
+            print('Ignored:' + t[0])
+            pass    
+    
+    for sense_l in senses:
+        for s in sense_l:
+            print(s.definition)
+        
     return ''
 
 '''
