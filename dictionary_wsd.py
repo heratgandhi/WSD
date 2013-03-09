@@ -7,7 +7,6 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.corpus import wordnet
 from nltk.stem.wordnet import WordNetLemmatizer
-from nltk.corpus import WordNetCorpusReader as wn
 import string
 import re
 
@@ -17,7 +16,7 @@ import re
     @param n: n context words we want to retrieve
     @return: Return list of n context words
 '''
-def get_context_words(line,n,lines1):
+def get_context_words(line,n,lines1,target):
     temp = line.lower()
     temp = re.sub('[0-9]+','',temp)
     
@@ -112,9 +111,26 @@ def get_context_words(line,n,lines1):
     for sense_l in toponyms:
         for s in sense_l:
             definitions.append(s.definition) 
-            
-    print(definitions)               
-            
+    
+    target_w_l = []
+    for w in wordnet.synsets(target):
+        target_w_l.append(w.definition)        
+    
+    definitions = ' '.join(definitions).split()
+    definitions_s = set(definitions)
+    
+    max_index = -1
+    max = -1
+    index = 0
+    for w in target_w_l:
+        temp_S = set(w.split())
+        if len(temp_S & definitions_s) > max:
+            max = len(temp_S & definitions_s)
+            max_index = index
+        index += 1    
+    
+    print( str(max_index) + ' ' + target_w_l[max_index] )
+    
     return ''
 
 '''
@@ -135,7 +151,7 @@ def WSD_Dict(filename):
         line = line[at_p+1:] #Get rest of the line
         target_in_sentence = line[line.find('@')+1:line.rfind('@')] #Target word in the sentence
         #line = line.replace('@','')
-        context_words = get_context_words(line,5,lines1)
+        context_words = get_context_words(line,5,lines1,strating_target)
     
 def main():
     filename = raw_input('Enter file name to test: ')
