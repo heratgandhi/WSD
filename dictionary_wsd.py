@@ -71,10 +71,50 @@ def get_context_words(line,n,lines1):
             print('Ignored:' + t[0])
             pass    
     
+    hypernyms = []
     for sense_l in senses:
         for s in sense_l:
-            print(s.definition)
-        
+            #print(s.definition)
+            hypernyms.append(s.hypernyms())
+    
+    hyponyms = []
+    for sense_l in senses:
+        for s in sense_l:
+            hyponyms.append(s.hyponyms())
+            
+    meronyms = []
+    for sense_l in senses:
+        for s in sense_l:
+            meronyms.append(s.part_meronyms())        
+    
+    toponyms = []
+    for sense_l in senses:
+        for s in sense_l:
+            toponyms.append(s.part_holonyms())
+            
+    definitions = []
+    for sense_l in senses:
+        for s in sense_l:
+            definitions.append(s.definition)
+    
+    for sense_l in hypernyms:
+        for s in sense_l:
+            definitions.append(s.definition)
+   
+    for sense_l in hyponyms:
+        for s in sense_l:
+            definitions.append(s.definition)
+    
+    for sense_l in meronyms:
+        for s in sense_l:
+            definitions.append(s.definition)
+            
+    for sense_l in toponyms:
+        for s in sense_l:
+            definitions.append(s.definition) 
+            
+    print(definitions)               
+            
     return ''
 
 '''
