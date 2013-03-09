@@ -9,6 +9,7 @@ from nltk.corpus import wordnet
 from nltk.stem.wordnet import WordNetLemmatizer
 import string
 import re
+from bs4 import BeautifulSoup as Soup
 
 '''
     Function to get context words from the given sample
@@ -121,13 +122,19 @@ def get_context_words(line,n,lines1,target):
     
     max_index = -1
     max = -1
-    index = 0
-    for w in target_w_l:
-        temp_S = set(w.split())
-        if len(temp_S & definitions_s) > max:
-            max = len(temp_S & definitions_s)
-            max_index = index
-        index += 1    
+    index = 1
+        
+    file = 'Dictionary.xml'
+    handler = open(file).read()
+    soup = Soup(handler)
+    for message in soup.dictmap.findAll('lexelt'):
+        if target in message['item']:
+            for s in message.findAll('sense'):
+                temp_S = set(s['gloss'].split())
+                if len(temp_S & definitions_s) > max:
+                    max = len(temp_S & definitions_s)
+                    max_index = index
+                index += 1
     
     print( str(max_index) + ' ' + target_w_l[max_index] )
     
