@@ -19,10 +19,9 @@ def substrings(string):
         while True:
             for i in range(len(string)-j+1):
                 a.add(string[i:i+j])
-            if j==len(string):
+            if j == len(string):
                 break
             j+=1
-            #string=string[1:]
     return a
 
 def calculate_overlap_score(string1,string2):
@@ -50,9 +49,8 @@ def calculate_overlap_score(string1,string2):
             i += 1
     
     for elem in set_i:
-        print("#"+elem+"#")
+        #print("#"+elem+"#")
         score += len(elem)**2
-    
     return score
 
 def calculate_overall_score(s1,s2):
@@ -135,7 +133,7 @@ def get_context_words(line,n,lines1,target):
         for s in sense_l:
             hyponyms.append(s.hyponyms())
             
-    meronyms = []
+    '''meronyms = []
     for sense_l in senses:
         for s in sense_l:
             meronyms.append(s.part_meronyms())        
@@ -143,7 +141,7 @@ def get_context_words(line,n,lines1,target):
     toponyms = []
     for sense_l in senses:
         for s in sense_l:
-            toponyms.append(s.part_holonyms())
+            toponyms.append(s.part_holonyms())'''
             
     definitions = []
     for sense_l in senses:
@@ -158,13 +156,13 @@ def get_context_words(line,n,lines1,target):
         for s in sense_l:
             definitions.append(s.definition)
     
-    for sense_l in meronyms:
+    '''for sense_l in meronyms:
         for s in sense_l:
             definitions.append(s.definition)
             
     for sense_l in toponyms:
         for s in sense_l:
-            definitions.append(s.definition) 
+            definitions.append(s.definition)''' 
     
     target_w_l = []
     for w in wordnet.synsets(target):
@@ -185,9 +183,6 @@ def get_context_words(line,n,lines1,target):
         if target in message['item']:
             for s in message.findAll('sense'):
                 temp_S = set(s['gloss'].split())
-                
-                print(temp_S & definitions_s)
-                
                 if len(temp_S & definitions_s) > max:
                     max = len(temp_S & definitions_s)
                     max_str = s['gloss']
@@ -219,8 +214,8 @@ def WSD_Dict(filename):
         context_words = get_context_words(line,5,lines1,strating_target)
     
 def main():
-    #filename = raw_input('Enter file name to test: ')
-    #WSD_Dict(filename)
-    print(calculate_overall_score("ABCDEF ABXX GHGSHJGS", "GDABCDCH"))
+    filename = raw_input('Enter file name to test: ')
+    WSD_Dict(filename)
+    #print(calculate_overall_score("ABCDEF ABXX GHGSHJGS", "GDABCDCH"))
 
 main()
