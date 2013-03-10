@@ -11,6 +11,15 @@ import string
 import re
 from bs4 import BeautifulSoup as Soup
 
+def remove_junk(string1,lines1):
+    string1 = re.sub('[0-9]+','',string1)
+    for punct in string.punctuation:
+        string1 = string1.replace(punct,'')
+    temp_l1 = string1.split()
+    important_words1 = filter(lambda x: x not in stopwords.words('english'), temp_l1)
+    important_words1 = filter(lambda x: x not in lines1, important_words1)    
+    return ' '.join(list(set(important_words1)))
+
 def substrings(string):
     strings = string.split()
     for string in strings:
@@ -122,7 +131,7 @@ def get_context_words(line,n,lines1,target):
             print('Ignored:' + t[0])
             pass    
     
-    hypernyms = []
+    '''hypernyms = []
     for sense_l in senses:
         for s in sense_l:
             #print(s.definition)
@@ -133,7 +142,7 @@ def get_context_words(line,n,lines1,target):
         for s in sense_l:
             hyponyms.append(s.hyponyms())
             
-    '''meronyms = []
+    meronyms = []
     for sense_l in senses:
         for s in sense_l:
             meronyms.append(s.part_meronyms())        
@@ -148,7 +157,7 @@ def get_context_words(line,n,lines1,target):
         for s in sense_l:
             definitions.append(s.definition)
     
-    for sense_l in hypernyms:
+    '''for sense_l in hypernyms:
         for s in sense_l:
             definitions.append(s.definition)
    
@@ -156,7 +165,7 @@ def get_context_words(line,n,lines1,target):
         for s in sense_l:
             definitions.append(s.definition)
     
-    '''for sense_l in meronyms:
+    for sense_l in meronyms:
         for s in sense_l:
             definitions.append(s.definition)
             
@@ -168,8 +177,8 @@ def get_context_words(line,n,lines1,target):
     for w in wordnet.synsets(target):
         target_w_l.append(w.definition)        
     
-    definitions = ' '.join(definitions).split()
-    definitions_s = set(definitions)
+    definitions = ' '.join(definitions)#.split()
+    #definitions_s = set(definitions)
     
     max_index = -1
     max = -1
@@ -182,14 +191,16 @@ def get_context_words(line,n,lines1,target):
     for message in soup.dictmap.findAll('lexelt'):
         if target in message['item']:
             for s in message.findAll('sense'):
-                temp_S = set(s['gloss'].split())
-                if len(temp_S & definitions_s) > max:
-                    max = len(temp_S & definitions_s)
+                #temp_S = set(s['gloss'].split())
+                temp_sc = calculate_overall_score( remove_junk(s['gloss'], lines1), remove_junk(definitions, lines1))
+                print(str(temp_sc) + s['gloss'] + '####' + remove_junk(s['gloss'], lines1) + '####' + remove_junk(definitions, lines1))
+                if temp_sc > max:
+                    max = temp_sc
                     max_str = s['gloss']
                     max_index = index
                 index += 1
     
-    print( str(max_index) + ' ' + max_str )
+    print( str(max) + ' ' + max_str )
     
     return ''
 
@@ -211,7 +222,7 @@ def WSD_Dict(filename):
         line = line[at_p+1:] #Get rest of the line
         target_in_sentence = line[line.find('@')+1:line.rfind('@')] #Target word in the sentence
         #line = line.replace('@','')
-        context_words = get_context_words(line,5,lines1,strating_target)
+        context_words = get_context_words(line,3,lines1,strating_target)
     
 def main():
     filename = raw_input('Enter file name to test: ')
