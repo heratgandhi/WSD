@@ -55,6 +55,15 @@ def calculate_overlap_score(string1,string2):
     
     return score
 
+def calculate_overall_score(s1,s2):
+    sl1 = s1.split()
+    sl2 = s2.split()
+    total = 0
+    for e1 in sl1:
+        for e2 in sl2:
+            total += calculate_overlap_score(e1, e2)
+    return total
+
 '''
     Function to get context words from the given sample
     @param line: Sample from which we need to retrieve context words
@@ -212,6 +221,6 @@ def WSD_Dict(filename):
 def main():
     #filename = raw_input('Enter file name to test: ')
     #WSD_Dict(filename)
-    print(calculate_overlap_score("ABCDEF", "GDABCDCH"))
+    print(calculate_overall_score("ABCDEF ABXX GHGSHJGS", "GDABCDCH"))
 
 main()
