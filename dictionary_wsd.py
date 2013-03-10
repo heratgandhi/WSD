@@ -11,66 +11,15 @@ import string
 import re
 from bs4 import BeautifulSoup as Soup
 
-'''def remove_junk(string1,lines1):
+def remove_junk(string1,lines1):
     string1 = re.sub('[0-9]+','',string1)
     for punct in string.punctuation:
         string1 = string1.replace(punct,'')
     temp_l1 = string1.split()
     important_words1 = filter(lambda x: x not in stopwords.words('english'), temp_l1)
-    important_words1 = filter(lambda x: x not in lines1, important_words1)    
-    return ' '.join(list(set(important_words1)))
-
-def substrings(string):
-    strings = string.split()
-    for string in strings:
-        j=1
-        a=set()
-        while True:
-            for i in range(len(string)-j+1):
-                a.add(string[i:i+j])
-            if j == len(string):
-                break
-            j+=1
-    return a
-
-def calculate_overlap_score(string1,string2):
-    set1 = substrings(string1)
-    set2 = substrings(string2)
-    set_i = list(set1 & set2)
-    score = 0
-    i = 0
-    bol = False
+    important_words1 = filter(lambda x: x not in lines1, important_words1)
+    return ' '.join(important_words1)    
     
-    while i < len(set_i):
-        j = 0
-        bol = False
-        while j < len(set_i):
-            if i < len(set_i) and j < len(set_i):
-                if set_i[i] in set_i[j] and i != j:
-                    set_i.remove(set_i[i])
-                    bol = True
-                    break
-                else:
-                    j += 1
-            else:
-                break
-        if not bol:
-            i += 1
-    
-    for elem in set_i:
-        #print("#"+elem+"#")
-        score += len(elem)**2
-    return score
-
-def calculate_overall_score(s1,s2):
-    sl1 = s1.split()
-    sl2 = s2.split()
-    total = 0
-    for e1 in sl1:
-        for e2 in sl2:
-            total += calculate_overlap_score(e1, e2)
-    return total'''
-
 def find_word_sequences(s1):
     s1l = s1.split()
     
@@ -166,7 +115,7 @@ def get_context_words(line,n,lines1,target):
             print('Ignored:' + t[0])
             pass    
     
-    '''hypernyms = []
+    hypernyms = []
     for sense_l in senses:
         for s in sense_l:
             #print(s.definition)
@@ -185,14 +134,14 @@ def get_context_words(line,n,lines1,target):
     toponyms = []
     for sense_l in senses:
         for s in sense_l:
-            toponyms.append(s.part_holonyms())'''
+            toponyms.append(s.part_holonyms())
             
     definitions = []
     for sense_l in senses:
         for s in sense_l:
             definitions.append(s.definition)
     
-    '''for sense_l in hypernyms:
+    for sense_l in hypernyms:
         for s in sense_l:
             definitions.append(s.definition)
    
@@ -206,7 +155,7 @@ def get_context_words(line,n,lines1,target):
             
     for sense_l in toponyms:
         for s in sense_l:
-            definitions.append(s.definition)''' 
+            definitions.append(s.definition)
     
     target_w_l = []
     for w in wordnet.synsets(target):
@@ -226,15 +175,14 @@ def get_context_words(line,n,lines1,target):
     for message in soup.dictmap.findAll('lexelt'):
         if target in message['item']:
             for s in message.findAll('sense'):
-                #temp_S = set(s['gloss'].split())
-                temp_sc = calculate_overall_score( s['gloss'], definitions)
+                temp_sc = calculate_overall_score(remove_junk(s['gloss'], lines1), remove_junk(definitions,lines1))
                 if temp_sc > max:
                     max = temp_sc
                     max_str = s['gloss']
                     max_index = index
                 index += 1
     
-    print( str(max) + ' ' + max_str + ' ' + str(max_index))
+    print( str(max_index)  + ' ' + max_str + ' ' + str(max))
     
     return ''
 
@@ -255,12 +203,10 @@ def WSD_Dict(filename):
         form = starting[0].split('.')[1] #Target word form
         line = line[at_p+1:] #Get rest of the line
         target_in_sentence = line[line.find('@')+1:line.rfind('@')] #Target word in the sentence
-        #line = line.replace('@','')
         context_words = get_context_words(line,3,lines1,strating_target)
     
 def main():
     filename = raw_input('Enter file name to test: ')
     WSD_Dict(filename)
-    #print(calculate_overall_score("ABCDEF ABXX GHGSHJGS", "GDABCDCH"))
 
 main()
