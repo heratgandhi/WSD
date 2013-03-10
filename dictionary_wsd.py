@@ -123,6 +123,7 @@ def get_context_words(line,n,lines1,target):
     max_index = -1
     max = -1
     index = 1
+    max_str = ''
         
     file = 'Dictionary.xml'
     handler = open(file).read()
@@ -131,12 +132,16 @@ def get_context_words(line,n,lines1,target):
         if target in message['item']:
             for s in message.findAll('sense'):
                 temp_S = set(s['gloss'].split())
+                
+                print(temp_S & definitions_s)
+                
                 if len(temp_S & definitions_s) > max:
                     max = len(temp_S & definitions_s)
+                    max_str = s['gloss']
                     max_index = index
                 index += 1
     
-    print( str(max_index) + ' ' + target_w_l[max_index] )
+    print( str(max_index) + ' ' + max_str )
     
     return ''
 
