@@ -11,6 +11,17 @@ import string
 import re
 from bs4 import BeautifulSoup as Soup
 
+def find_gloss_from_file(str):
+    file = 'Dictionary.xml'
+    handler = open(file).read()
+    soup = Soup(handler)
+    glossstr = ''
+    for message in soup.dictmap.findAll('lexelt'):
+        if str in message['item']:
+            for s in message.findAll('sense'):
+                glossstr += ' ' + s['gloss']
+    return glossstr
+    
 def remove_junk(string1,lines1):
     string1 = re.sub('[0-9]+','',string1)
     for punct in string.punctuation:
@@ -118,7 +129,6 @@ def get_context_words(line,n,lines1,target):
     hypernyms = []
     for sense_l in senses:
         for s in sense_l:
-            #print(s.definition)
             hypernyms.append(s.hypernyms())
     
     hyponyms = []
@@ -126,7 +136,7 @@ def get_context_words(line,n,lines1,target):
         for s in sense_l:
             hyponyms.append(s.hyponyms())
             
-    meronyms = []
+    '''meronyms = []
     for sense_l in senses:
         for s in sense_l:
             meronyms.append(s.part_meronyms())        
@@ -134,7 +144,7 @@ def get_context_words(line,n,lines1,target):
     toponyms = []
     for sense_l in senses:
         for s in sense_l:
-            toponyms.append(s.part_holonyms())
+            toponyms.append(s.part_holonyms())'''
             
     definitions = []
     for sense_l in senses:
@@ -149,20 +159,21 @@ def get_context_words(line,n,lines1,target):
         for s in sense_l:
             definitions.append(s.definition)
     
-    for sense_l in meronyms:
+    '''for sense_l in meronyms:
         for s in sense_l:
             definitions.append(s.definition)
             
     for sense_l in toponyms:
         for s in sense_l:
-            definitions.append(s.definition)
+            definitions.append(s.definition)'''
     
-    target_w_l = []
+    '''target_w_l = []
     for w in wordnet.synsets(target):
-        target_w_l.append(w.definition)        
+        target_w_l.append(w.definition)'''        
     
-    definitions = ' '.join(definitions)#.split()
-    #definitions_s = set(definitions)
+    definitions = ' '.join(definitions)
+    
+    #print(definitions)
     
     max_index = -1
     max = -1
@@ -208,5 +219,5 @@ def WSD_Dict(filename):
 def main():
     filename = raw_input('Enter file name to test: ')
     WSD_Dict(filename)
-
+    
 main()
