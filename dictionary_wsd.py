@@ -11,6 +11,50 @@ import string
 import re
 from bs4 import BeautifulSoup as Soup
 
+def substrings(string):
+    strings = string.split()
+    for string in strings:
+        j=1
+        a=set()
+        while True:
+            for i in range(len(string)-j+1):
+                a.add(string[i:i+j])
+            if j==len(string):
+                break
+            j+=1
+            #string=string[1:]
+    return a
+
+def calculate_overlap_score(string1,string2):
+    set1 = substrings(string1)
+    set2 = substrings(string2)
+    set_i = list(set1 & set2)
+    score = 0
+    i = 0
+    bol = False
+    
+    while i < len(set_i):
+        j = 0
+        bol = False
+        while j < len(set_i):
+            if i < len(set_i) and j < len(set_i):
+                if set_i[i] in set_i[j] and i != j:
+                    set_i.remove(set_i[i])
+                    bol = True
+                    break
+                else:
+                    j += 1
+            else:
+                break
+        if not bol:
+            i += 1
+    
+    for elem in set_i:
+        print("#"+elem+"#")
+        score += len(elem)**2
+    
+    return score
+
 '''
     Function to get context words from the given sample
     @param line: Sample from which we need to retrieve context words
@@ -166,7 +210,8 @@ def WSD_Dict(filename):
         context_words = get_context_words(line,5,lines1,strating_target)
     
 def main():
-    filename = raw_input('Enter file name to test: ')
-    WSD_Dict(filename)
+    #filename = raw_input('Enter file name to test: ')
+    #WSD_Dict(filename)
+    print(calculate_overlap_score("ABCDEF", "GDABCDCH"))
 
 main()
