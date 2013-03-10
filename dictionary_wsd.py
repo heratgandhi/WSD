@@ -11,7 +11,7 @@ import string
 import re
 from bs4 import BeautifulSoup as Soup
 
-def remove_junk(string1,lines1):
+'''def remove_junk(string1,lines1):
     string1 = re.sub('[0-9]+','',string1)
     for punct in string.punctuation:
         string1 = string1.replace(punct,'')
@@ -69,6 +69,41 @@ def calculate_overall_score(s1,s2):
     for e1 in sl1:
         for e2 in sl2:
             total += calculate_overlap_score(e1, e2)
+    return total'''
+
+def find_word_sequences(s1):
+    s1l = s1.split()
+    
+    i = 0
+    j = 0
+    k = 1
+    
+    new_s1l = []
+    str = ''
+    while k <= len(s1l):
+        i = 0        
+        while i < len(s1l)-k+1:
+            j = i
+            cnt = 0
+            str = ''
+            while j < k+i:
+                if j == k+i-1:
+                    str += s1l[i+cnt]
+                else:
+                    str += s1l[i+cnt]+ ' '
+                j += 1
+                cnt += 1
+            i += 1
+            new_s1l.append(str)            
+        k += 1
+    return new_s1l
+    
+def calculate_overall_score(s1,s2):
+    seq1 = find_word_sequences(s1)
+    total = 0
+    for elem in seq1:
+        if elem in s2:
+            total += (elem.count(' ')+1) ** 2
     return total
 
 '''
@@ -192,15 +227,14 @@ def get_context_words(line,n,lines1,target):
         if target in message['item']:
             for s in message.findAll('sense'):
                 #temp_S = set(s['gloss'].split())
-                temp_sc = calculate_overall_score( remove_junk(s['gloss'], lines1), remove_junk(definitions, lines1))
-                print(str(temp_sc) + s['gloss'] + '####' + remove_junk(s['gloss'], lines1) + '####' + remove_junk(definitions, lines1))
+                temp_sc = calculate_overall_score( s['gloss'], definitions)
                 if temp_sc > max:
                     max = temp_sc
                     max_str = s['gloss']
                     max_index = index
                 index += 1
     
-    print( str(max) + ' ' + max_str )
+    print( str(max) + ' ' + max_str + ' ' + str(max_index))
     
     return ''
 
