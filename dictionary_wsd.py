@@ -14,8 +14,11 @@ from bs4 import BeautifulSoup as Soup
 def find_gloss_from_file(str):
     file = 'Dictionary.xml'
     content = open(file).read()
-    main_str = re.compile('<lexelt item="'+str+'.[a-z]">(.*?)</lexelt>', re.DOTALL |  re.IGNORECASE).findall(content)[0]
-    return re.compile('gloss="(.*)"').findall(main_str)
+    l = re.compile('<lexelt item="'+str+'.[a-z]">(.*?)</lexelt>', re.DOTALL |  re.IGNORECASE).findall(content)
+    if len(l) > 0 :
+        return re.compile('gloss="(.*)"').findall(l[0])
+    else:
+        return -1
     
 def remove_junk(string1,lines1):
     string1 = re.sub('[0-9]+','',string1)
@@ -27,12 +30,10 @@ def remove_junk(string1,lines1):
     return ' '.join(important_words1)    
     
 def find_word_sequences(s1):
-    s1l = s1.split()
-    
+    s1l = s1.split()    
     i = 0
     j = 0
-    k = 1
-    
+    k = 1    
     new_s1l = []
     str = ''
     while k <= len(s1l):
@@ -67,7 +68,7 @@ def calculate_overall_score(s1,s2):
     @param n: n context words we want to retrieve
     @return: Return list of n context words
 '''
-def get_context_words(line,n,lines1,target):
+def get_sense_index(line,n,lines1,target):
     temp = line.lower()
     temp = re.sub('[0-9]+','',temp)
     
@@ -142,6 +143,8 @@ def get_context_words(line,n,lines1,target):
     definitions = []
     for sense_l in senses:
         for s in sense_l:
+            if find_gloss_from_file(s.name.split('.')[0]) != -1:
+                definitions.append(' '.join(find_gloss_from_file(s.name.split('.')[0])))
             definitions.append(s.definition)
     
     for sense_l in hypernyms:
@@ -158,11 +161,11 @@ def get_context_words(line,n,lines1,target):
             
     for sense_l in toponyms:
         for s in sense_l:
-            definitions.append(s.definition)'''
+            definitions.append(s.definition)
     
     target_w_l = []
     for w in wordnet.synsets(target):
-        target_w_l.append(w.definition)  
+        target_w_l.append(w.definition)'''  
         
     definitions = ' '.join(definitions)
     
@@ -173,22 +176,17 @@ def get_context_words(line,n,lines1,target):
     index = 1
     max_str = ''
         
-    file = 'Dictionary.xml'
-    handler = open(file).read()
-    soup = Soup(handler)
-    for message in soup.dictmap.findAll('lexelt'):
-        if target in message['item']:
-            for s in message.findAll('sense'):
-                temp_sc = calculate_overall_score(remove_junk(s['gloss'].lower(), lines1), remove_junk(definitions,lines1))
-                if temp_sc > max:
-                    max = temp_sc
-                    max_str = s['gloss']
-                    max_index = index
-                index += 1
+    for s in find_gloss_from_file(target):
+        temp_sc = calculate_overall_score(remove_junk(s.lower(), lines1), remove_junk(definitions,lines1))
+        if temp_sc > max:
+            max = temp_sc
+            max_str = s
+            max_index = index
+        index += 1
     
-    print( str(max_index)  + ' ' + max_str + ' ' + str(max))
+    #print( str(max_index)  + ' ' + max_str + ' ' + str(max))
     
-    return ''
+    return [max_index,len(find_gloss_from_file(target))]
 
 '''
     Function to perform WSD based on dictionaries
@@ -199,6 +197,7 @@ def WSD_Dict(filename):
     lines = fp.readlines()
     fp2 = open('words.txt','r')
     lines1 = fp2.read().splitlines()
+    fpo = open('output.txt','w')
     
     for line in lines:
         at_p = line.find('@') #Find first occurance of @ that helps to identify where to break string
@@ -207,7 +206,18 @@ def WSD_Dict(filename):
         form = starting[0].split('.')[1] #Target word form
         line = line[at_p+1:] #Get rest of the line
         target_in_sentence = line[line.find('@')+1:line.rfind('@')] #Target word in the sentence
-        context_words = get_context_words(line,3,lines1,strating_target)
+        context_words = get_sense_index(line,5,lines1,strating_target)
+        ind = 1
+        print(1)
+        fpo.write('1\n')
+        while ind <= context_words[1]:
+            if ind == context_words[0]:
+                fpo.write('1\n')
+                print(1)
+            else:
+                fpo.write('0\n')
+                print(0)
+            ind += 1
     
 def main():
     filename = raw_input('Enter file name to test: ')
