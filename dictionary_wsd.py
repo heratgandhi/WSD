@@ -13,14 +13,9 @@ from bs4 import BeautifulSoup as Soup
 
 def find_gloss_from_file(str):
     file = 'Dictionary.xml'
-    handler = open(file).read()
-    soup = Soup(handler)
-    glossstr = ''
-    for message in soup.dictmap.findAll('lexelt'):
-        if str in message['item']:
-            for s in message.findAll('sense'):
-                glossstr += ' ' + s['gloss']
-    return glossstr
+    content = open(file).read()
+    main_str = re.compile('<lexelt item="'+str+'.[a-z]">(.*?)</lexelt>', re.DOTALL |  re.IGNORECASE).findall(content)[0]
+    return re.compile('gloss="(.*)"').findall(main_str)
     
 def remove_junk(string1,lines1):
     string1 = re.sub('[0-9]+','',string1)
@@ -113,7 +108,6 @@ def get_context_words(line,n,lines1,target):
             else:
                 senses.append(wordnet.synsets(t[0]))
         except:
-            print('Ignored: '+t[0])
             pass
         
     for t in temp_words2:
@@ -123,7 +117,6 @@ def get_context_words(line,n,lines1,target):
             else:
                 senses.append(wordnet.synsets(t[0]))
         except:
-            print('Ignored:' + t[0])
             pass    
     
     hypernyms = []
@@ -167,10 +160,10 @@ def get_context_words(line,n,lines1,target):
         for s in sense_l:
             definitions.append(s.definition)'''
     
-    '''target_w_l = []
+    target_w_l = []
     for w in wordnet.synsets(target):
-        target_w_l.append(w.definition)'''        
-    
+        target_w_l.append(w.definition)  
+        
     definitions = ' '.join(definitions)
     
     #print(definitions)
@@ -186,7 +179,7 @@ def get_context_words(line,n,lines1,target):
     for message in soup.dictmap.findAll('lexelt'):
         if target in message['item']:
             for s in message.findAll('sense'):
-                temp_sc = calculate_overall_score(remove_junk(s['gloss'], lines1), remove_junk(definitions,lines1))
+                temp_sc = calculate_overall_score(remove_junk(s['gloss'].lower(), lines1), remove_junk(definitions,lines1))
                 if temp_sc > max:
                     max = temp_sc
                     max_str = s['gloss']

@@ -1,15 +1,12 @@
 import sys
+import re
 from bs4 import BeautifulSoup as Soup
 
 def parseLog(file):
     file = 'Dictionary.xml'
-    handler = open(file).read()
-    soup = Soup(handler)
-    for message in soup.dictmap.findAll('lexelt'):
-        if 'argument' in message['item']:
-            for s in message.findAll('sense'):
-                print(s['gloss'])
-        '''if 'activate' in soup.lexelt.get('item'):
-            print soup.lexelt.findAll('senses')'''
+    content = open(file).read()
+    main_str = re.compile('<lexelt item="argument.[a-z]">(.*?)</lexelt>', re.DOTALL |  re.IGNORECASE).findall(content)[0]
+    return re.compile('gloss="(.*)"').findall(main_str)
+    
 if __name__ == "__main__":
     parseLog('')
