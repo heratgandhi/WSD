@@ -7,9 +7,9 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.corpus import wordnet
 from nltk.stem.wordnet import WordNetLemmatizer
+from nltk.stem.lancaster import LancasterStemmer
 import string
 import re
-from bs4 import BeautifulSoup as Soup
 
 def find_gloss_from_file(str):
     file = 'Dictionary.xml'
@@ -22,12 +22,14 @@ def find_gloss_from_file(str):
     
 def remove_junk(string1,lines1):
     string1 = re.sub('[0-9]+','',string1)
+    
     for punct in string.punctuation:
         string1 = string1.replace(punct,'')
+    
     temp_l1 = string1.split()
     important_words1 = filter(lambda x: x not in stopwords.words('english'), temp_l1)
     important_words1 = filter(lambda x: x not in lines1, important_words1)
-    return ' '.join(important_words1)    
+    return ' '.join(important_words1)
     
 def find_word_sequences(s1):
     s1l = s1.split()    
@@ -93,11 +95,13 @@ def get_sense_index(line,n,lines1,target):
     important_words1 = nltk.pos_tag(important_words1)
     important_words2 = nltk.pos_tag(important_words2)
 
-    if len(important_words1) > n:
+    '''if len(important_words1) > n:
         temp_words1 = important_words1[len(important_words1)-n:]
     else:
         temp_words1 = important_words1
-    temp_words2 = important_words2[:n]
+    temp_words2 = important_words2[:n]'''
+    temp_words1 = important_words1
+    temp_words2 = important_words2
     
     senses = []
     lmtzr = WordNetLemmatizer()
@@ -120,7 +124,7 @@ def get_sense_index(line,n,lines1,target):
         except:
             pass    
     
-    hypernyms = []
+    '''hypernyms = []
     for sense_l in senses:
         for s in sense_l:
             hypernyms.append(s.hypernyms())
@@ -130,7 +134,7 @@ def get_sense_index(line,n,lines1,target):
         for s in sense_l:
             hyponyms.append(s.hyponyms())
             
-    '''meronyms = []
+    meronyms = []
     for sense_l in senses:
         for s in sense_l:
             meronyms.append(s.part_meronyms())        
@@ -147,7 +151,7 @@ def get_sense_index(line,n,lines1,target):
                 definitions.append(' '.join(find_gloss_from_file(s.name.split('.')[0])))
             definitions.append(s.definition)
     
-    for sense_l in hypernyms:
+    '''for sense_l in hypernyms:
         for s in sense_l:
             definitions.append(s.definition)
    
@@ -155,21 +159,15 @@ def get_sense_index(line,n,lines1,target):
         for s in sense_l:
             definitions.append(s.definition)
     
-    '''for sense_l in meronyms:
+    for sense_l in meronyms:
         for s in sense_l:
             definitions.append(s.definition)
             
     for sense_l in toponyms:
         for s in sense_l:
-            definitions.append(s.definition)
+            definitions.append(s.definition)'''
     
-    target_w_l = []
-    for w in wordnet.synsets(target):
-        target_w_l.append(w.definition)'''  
-        
     definitions = ' '.join(definitions)
-    
-    #print(definitions)
     
     max_index = -1
     max = -1
@@ -177,16 +175,23 @@ def get_sense_index(line,n,lines1,target):
     max_str = ''
         
     for s in find_gloss_from_file(target):
-        temp_sc = calculate_overall_score(remove_junk(s.lower(), lines1), remove_junk(definitions,lines1))
+        stemmed1 = stem_funct(remove_junk(s.lower(),lines1))
+        stemmed2 = stem_funct(remove_junk(definitions,lines1))
+        temp_sc = calculate_overall_score(stemmed1, stemmed2)
         if temp_sc > max:
             max = temp_sc
-            max_str = s
+            max_str = stemmed1
             max_index = index
         index += 1
-    
-    #print( str(max_index)  + ' ' + max_str + ' ' + str(max))
-    
+    print(str(max_index) + " " + max_str)
     return [max_index,len(find_gloss_from_file(target))]
+
+def stem_funct(str):
+    res = ''
+    st = LancasterStemmer()
+    for word in str.split(' '):
+        res += ' ' + st.stem(word)
+    return res
 
 '''
     Function to perform WSD based on dictionaries
@@ -208,16 +213,14 @@ def WSD_Dict(filename):
         target_in_sentence = line[line.find('@')+1:line.rfind('@')] #Target word in the sentence
         context_words = get_sense_index(line,5,lines1,strating_target)
         ind = 1
-        print(1)
-        fpo.write('1\n')
+        op = '1\n'        
         while ind <= context_words[1]:
             if ind == context_words[0]:
-                fpo.write('1\n')
-                print(1)
+                op += '1\n'
             else:
-                fpo.write('0\n')
-                print(0)
+                op += '0\n'
             ind += 1
+        fpo.write(op)
     
 def main():
     filename = raw_input('Enter file name to test: ')
