@@ -11,15 +11,24 @@ from nltk.stem.lancaster import LancasterStemmer
 import string
 import re
 
+dict_file = open('Dictionary.xml').read()
+
+'''
+    Find Glosses from XML file
+    @return: all definitions of a gloss and if word is not in XML then return -1
+'''
 def find_gloss_from_file(str):
-    file = 'Dictionary.xml'
-    content = open(file).read()
-    l = re.compile('<lexelt item="'+str+'.[a-z]">(.*?)</lexelt>', re.DOTALL |  re.IGNORECASE).findall(content)
+    global dict_file
+    content = dict_file
+    l = re.compile('<lexelt item="' + str + '.[a-z]">(.*?)</lexelt>', re.DOTALL |  re.IGNORECASE).findall(content)
     if len(l) > 0 :
         return re.compile('gloss="(.*)"').findall(l[0])
     else:
         return -1
-    
+
+'''
+    Remove junk content that is numbers and stopwords from the string
+'''
 def remove_junk(string1,lines1):
     string1 = re.sub('[0-9]+','',string1)
     
@@ -30,7 +39,11 @@ def remove_junk(string1,lines1):
     important_words1 = filter(lambda x: x not in stopwords.words('english'), temp_l1)
     important_words1 = filter(lambda x: x not in lines1, important_words1)
     return ' '.join(important_words1)
-    
+
+
+'''
+    Function to find all sub-sequences from a string
+'''    
 def find_word_sequences(s1):
     s1l = s1.split()    
     i = 0
@@ -55,7 +68,10 @@ def find_word_sequences(s1):
             new_s1l.append(str)            
         k += 1
     return new_s1l
-    
+
+'''
+    Find total overlap
+'''    
 def calculate_overall_score(s1,s2):
     seq1 = find_word_sequences(s1)
     total = 0
@@ -63,6 +79,68 @@ def calculate_overall_score(s1,s2):
         if elem in s2:
             total += (elem.count(' ')+1) ** 2
     return total
+
+'''
+    Get bag of senses for a list of words
+'''
+def get_bag_of_senses(temp_words1):
+    senses = []
+    lmtzr = WordNetLemmatizer()
+    
+    temp_words1 = nltk.pos_tag(temp_words1)
+    
+    for t in temp_words1:
+        try:
+            if 'VB' in t[1]:
+                senses.append(wordnet.synsets(lmtzr.lemmatize(t[0],'v')))
+            else:
+                senses.append(wordnet.synsets(t[0]))
+        except:
+            pass    
+    
+    hypernyms = []
+    for sense_l in senses:
+        for s in sense_l:
+            hypernyms.append(s.hypernyms())
+    
+    '''hyponyms = []
+    for sense_l in senses:
+        for s in sense_l:
+            hyponyms.append(s.hyponyms())
+            
+    meronyms = []
+    for sense_l in senses:
+        for s in sense_l:
+            meronyms.append(s.part_meronyms())        
+    
+    toponyms = []
+    for sense_l in senses:
+        for s in sense_l:
+            toponyms.append(s.part_holonyms())'''
+    
+    definitions = []
+    for sense_l in senses:
+        for s in sense_l:
+            definitions.append(s.definition)
+    
+    for sense_l in hypernyms:
+        for s in sense_l:
+            definitions.append(s.name)
+   
+    '''for sense_l in hyponyms:
+        for s in sense_l:
+            definitions.append(s.definition)
+    
+    for sense_l in meronyms:
+        for s in sense_l:
+            definitions.append(s.definition)
+            
+    for sense_l in toponyms:
+        for s in sense_l:
+            definitions.append(s.definition)'''
+            
+    definitions = ' '.join(definitions)
+    return definitions
 
 '''
     Function to get context words from the given sample
@@ -80,111 +158,45 @@ def get_sense_index(line,n,lines1,target):
     temp1 = temp[:first_at]
     temp2 = temp[last_at:]
     
-    for punct in string.punctuation:
-        temp1 = temp1.replace(punct,'')
-        temp2 = temp2.replace(punct,'')
+    important_words1 = remove_junk(temp1, lines1)
+    important_words2 = remove_junk(temp2, lines1)
     
-    temp_l1 = temp1.split()
-    temp_l2 = temp2.split()
-    
-    important_words1 = filter(lambda x: x not in stopwords.words('english'), temp_l1)
-    important_words1 = filter(lambda x: x not in lines1, important_words1)
-    important_words2 = filter(lambda x: x not in stopwords.words('english'), temp_l2)
-    important_words2 = filter(lambda x: x not in lines1, important_words2)
-    
-    important_words1 = nltk.pos_tag(important_words1)
-    important_words2 = nltk.pos_tag(important_words2)
-
     '''if len(important_words1) > n:
-        temp_words1 = important_words1[len(important_words1)-n:]
+        important_words1 = important_words1[len(important_words1)-n:]
     else:
-        temp_words1 = important_words1
-    temp_words2 = important_words2[:n]'''
-    temp_words1 = important_words1
-    temp_words2 = important_words2
+        important_words1 = important_words1
+    important_words2 = important_words2[:n]'''
     
-    senses = []
-    lmtzr = WordNetLemmatizer()
+    definitions = ''
     
-    for t in temp_words1:
-        try:
-            if 'VB' in t[1]:
-                senses.append(wordnet.synsets(lmtzr.lemmatize(t[0],'v')))
-            else:
-                senses.append(wordnet.synsets(t[0]))
-        except:
-            pass
-        
-    for t in temp_words2:
-        try:
-            if 'VB' in t[1]:
-                senses.append(wordnet.synsets(lmtzr.lemmatize(t[0],'v')))
-            else:
-                senses.append(wordnet.synsets(t[0]))
-        except:
-            pass    
-    
-    '''hypernyms = []
-    for sense_l in senses:
-        for s in sense_l:
-            hypernyms.append(s.hypernyms())
-    
-    hyponyms = []
-    for sense_l in senses:
-        for s in sense_l:
-            hyponyms.append(s.hyponyms())
-            
-    meronyms = []
-    for sense_l in senses:
-        for s in sense_l:
-            meronyms.append(s.part_meronyms())        
-    
-    toponyms = []
-    for sense_l in senses:
-        for s in sense_l:
-            toponyms.append(s.part_holonyms())'''
-            
-    definitions = []
-    for sense_l in senses:
-        for s in sense_l:
-            if find_gloss_from_file(s.name.split('.')[0]) != -1:
-                definitions.append(' '.join(find_gloss_from_file(s.name.split('.')[0])))
-            definitions.append(s.definition)
-    
-    '''for sense_l in hypernyms:
-        for s in sense_l:
-            definitions.append(s.definition)
-   
-    for sense_l in hyponyms:
-        for s in sense_l:
-            definitions.append(s.definition)
-    
-    for sense_l in meronyms:
-        for s in sense_l:
-            definitions.append(s.definition)
-            
-    for sense_l in toponyms:
-        for s in sense_l:
-            definitions.append(s.definition)'''
-    
-    definitions = ' '.join(definitions)
-
+    definitions += ' ' + get_bag_of_senses(important_words1)
+    definitions += ' ' + get_bag_of_senses(important_words2)
     
     max_index = -1
     max = -1
     index = 1
     max_str = ''
-        
+    val = []    
     for s in find_gloss_from_file(target):
-        stemmed1 = stem_funct(remove_junk(s.lower(),lines1))
-        stemmed2 = stem_funct(remove_junk(definitions,lines1))
+        bag2 = get_bag_of_senses(remove_junk(s.lower(), lines1).split(' '))
+        stemmed1 = stem_funct(remove_junk(bag2, lines1))
+        stemmed2 = stem_funct(definitions)
         temp_sc = calculate_overall_score(stemmed1, stemmed2)
+        val.append(temp_sc)
+        
         if temp_sc > max:
             max = temp_sc
             max_str = stemmed1
             max_index = index
+        
         index += 1
-    print(str(max_index) + " " + max_str+" "+str(max))
+    
+    val.sort()
+    print(val)
+    if len(val) > 2:
+        if val[-1] - val[-2] < 10:
+            print 'No prediction'
+            return [-1,len(find_gloss_from_file(target))]
     return [max_index,len(find_gloss_from_file(target))]
 
 def stem_funct(str):
@@ -212,16 +224,25 @@ def WSD_Dict(filename):
         form = starting[0].split('.')[1] #Target word form
         line = line[at_p+1:] #Get rest of the line
         target_in_sentence = line[line.find('@')+1:line.rfind('@')] #Target word in the sentence
-        context_words = get_sense_index(line,5,lines1,strating_target)
-        ind = 1
-        op = '1\n'        
-        while ind <= context_words[1]:
-            if ind == context_words[0]:
-                op += '1\n'
-            else:
+        
+        context_words = get_sense_index(line,3,lines1,strating_target)
+        if context_words[0] != -1:
+            ind = 1
+            op = '0\n'        
+            while ind <= context_words[1]:
+                if ind == context_words[0]:
+                    op += '1\n'
+                else:
+                    op += '0\n'
+                ind += 1
+            fpo.write(op)
+        else:
+            ind = 1
+            op = '1\n'        
+            while ind <= context_words[1]:
                 op += '0\n'
-            ind += 1
-        fpo.write(op)
+                ind += 1
+            fpo.write(op)
     
 def main():
     filename = raw_input('Enter file name to test: ')
