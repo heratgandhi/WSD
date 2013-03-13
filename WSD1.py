@@ -165,12 +165,12 @@ def get_minibag_of_senses(temp_words1):
     definitions = ' '.join(definitions)
     return definitions
 
-'''def stem_funct(str):
+def stem_funct(str):
     res = ''
     st = LancasterStemmer()
     for word in str.split(' '):
         res += ' ' + st.stem(word)
-    return res'''
+    return res
 
 '''
     Function to get context words from the given sample
@@ -209,11 +209,11 @@ def get_sense_index(line,n,lines1,target):
     val = []    
     for s in find_gloss_from_file(target):
         bag2 = get_minibag_of_senses(remove_junk(s.lower(), lines1))#s.lower()#get_bag_of_senses(remove_junk(s.lower(), lines1).split(' '))
-        stemmed1 = remove_junk(bag2, lines1)#stem_funct(remove_junk(bag2, lines1))
+        stemmed1 = stem_funct(remove_junk(bag2, lines1))#stem_funct(remove_junk(bag2, lines1))
         
-        stemmed2 = definitions#stem_funct(definitions)
+        stemmed2 = stem_funct(definitions)#stem_funct(definitions)
         
-        temp_sc = calculate_overall_score(stemmed1, stemmed2)
+        temp_sc = calculate_overall_score(stemmed1, stemmed2) * 1.00 / len(stemmed1)
         
         val.append(temp_sc)
         
@@ -224,7 +224,7 @@ def get_sense_index(line,n,lines1,target):
         
         index += 1
     
-    print(max_index)
+    print(max_index,val)
     return [max_index,len(find_gloss_from_file(target))]
 
 '''
