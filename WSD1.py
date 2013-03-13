@@ -101,12 +101,12 @@ def get_bag_of_senses(temp_words1):
         for s in sense_l:
             hypernyms.append(s.hypernyms())
     
-    '''hyponyms = []
+    hyponyms = []
     for sense_l in senses:
         for s in sense_l:
             hyponyms.append(s.hyponyms())
             
-    meronyms = []
+    '''meronyms = []
     for sense_l in senses:
         for s in sense_l:
             meronyms.append(s.part_meronyms())        
@@ -125,20 +125,52 @@ def get_bag_of_senses(temp_words1):
         for s in sense_l:
             definitions.append(s.name)
    
-    '''for sense_l in hyponyms:
+    for sense_l in hyponyms:
         for s in sense_l:
-            definitions.append(s.definition)
+            definitions.append(s.name)
     
-    for sense_l in meronyms:
+    '''for sense_l in meronyms:
         for s in sense_l:
-            definitions.append(s.definition)
+            definitions.append(s.name)
             
     for sense_l in toponyms:
         for s in sense_l:
-            definitions.append(s.definition)'''
+            definitions.append(s.name)'''
             
     definitions = ' '.join(definitions)
     return definitions
+
+'''
+    Get bag of senses for a list of words
+'''
+def get_minibag_of_senses(temp_words1):
+    senses = []
+    lmtzr = WordNetLemmatizer()
+    temp_words1 = nltk.pos_tag(temp_words1.split())
+    
+    for t in temp_words1:
+        try:
+            if 'VB' in t[1]:
+                senses.append(wordnet.synsets(lmtzr.lemmatize(t[0],'v')))
+            else:
+                senses.append(wordnet.synsets(t[0]))
+        except:
+            pass    
+    
+    definitions = []
+    for sense_l in senses:
+        for s in sense_l:
+            definitions.append(s.name)
+            
+    definitions = ' '.join(definitions)
+    return definitions
+
+'''def stem_funct(str):
+    res = ''
+    st = LancasterStemmer()
+    for word in str.split(' '):
+        res += ' ' + st.stem(word)
+    return res'''
 
 '''
     Function to get context words from the given sample
@@ -176,10 +208,10 @@ def get_sense_index(line,n,lines1,target):
     max_str = ''
     val = []    
     for s in find_gloss_from_file(target):
-        bag2 = s.lower()#get_bag_of_senses(remove_junk(s.lower(), lines1).split(' '))
-        stemmed1 = stem_funct(remove_junk(bag2, lines1))
+        bag2 = get_minibag_of_senses(remove_junk(s.lower(), lines1))#s.lower()#get_bag_of_senses(remove_junk(s.lower(), lines1).split(' '))
+        stemmed1 = remove_junk(bag2, lines1)#stem_funct(remove_junk(bag2, lines1))
         
-        stemmed2 = stem_funct(definitions)
+        stemmed2 = definitions#stem_funct(definitions)
         
         temp_sc = calculate_overall_score(stemmed1, stemmed2)
         
@@ -192,20 +224,8 @@ def get_sense_index(line,n,lines1,target):
         
         index += 1
     
-    val.sort()
-    print(max_index,val)
-    '''if len(val) > 2:
-        if val[-1] - val[-2] < 10:
-            print 'No prediction'
-            return [-1,len(find_gloss_from_file(target))]'''
+    print(max_index)
     return [max_index,len(find_gloss_from_file(target))]
-
-def stem_funct(str):
-    res = ''
-    st = LancasterStemmer()
-    for word in str.split(' '):
-        res += ' ' + st.stem(word)
-    return res
 
 '''
     Function to perform WSD based on dictionaries
