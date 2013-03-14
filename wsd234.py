@@ -87,7 +87,8 @@ def calculate_overall_score(s1,s2):
 def get_bag_of_senses(temp_words1):
     senses = []
     lmtzr = WordNetLemmatizer()
-    temp_words1 = nltk.pos_tag(temp_words1.split(' '))
+    temp_words1 = nltk.pos_tag(temp_words1.split())
+    
     for t in temp_words1:
         try:
             if 'VB' in t[1]:
@@ -95,7 +96,8 @@ def get_bag_of_senses(temp_words1):
             else:
                 senses.append(wordnet.synsets(t[0]))
         except:
-            pass    
+            pass
+        
     hypernyms = []
     for sense_l in senses:
         for s in sense_l:
@@ -125,12 +127,12 @@ def get_bag_of_senses(temp_words1):
     for sense_l in hypernyms:
         if len(sense_l) > 1:
             for s in sense_l:
-                definitions.append(s.name)
+                definitions.append(s.definition)
    
     for sense_l in hyponyms:
         if len(sense_l) > 1:
             for s in sense_l:
-                definitions.append(s.name)
+                definitions.append(s.definition)
     
     '''for sense_l in meronyms:
         for s in sense_l:
@@ -139,7 +141,7 @@ def get_bag_of_senses(temp_words1):
     for sense_l in toponyms:
         for s in sense_l:
             definitions.append(s.name)'''
-    
+                    
     definitions = ' '.join(definitions)
     return definitions
 
@@ -160,17 +162,8 @@ def get_minibag_of_senses(temp_words1):
         except:
             pass
     
-    hypernyms = []
-    for sense_l in senses:
-        for s in sense_l:
-            hypernyms.append(s.hypernyms())    
-    
     definitions = []
     for sense_l in senses:
-        for s in sense_l:
-            definitions.append(s.name)
-            
-    for sense_l in hypernyms:
         for s in sense_l:
             definitions.append(s.name)
             
@@ -235,6 +228,7 @@ def get_sense_index(line,n,lines1,target):
         index += 1    
     
     val = sorted(val.items())
+    print(val)
     return [[val[-2],val[-1]],len(find_gloss_from_file(target))]
 
 '''
@@ -259,6 +253,7 @@ def WSD_Dict(filename):
         context_words = get_sense_index(line,3,lines1,strating_target)
         
         if context_words[0][1][0] - context_words[0][0][0] > 10:
+            print(context_words[0][1][1])
             ind = 1
             op = '0\n'        
             while ind <= context_words[1]:
@@ -270,7 +265,8 @@ def WSD_Dict(filename):
             fpo.write(op)
         else:
             ind = 1
-            op = '0\n'        
+            op = '0\n'      
+            print(context_words[0][1][1],context_words[0][0][1])  
             while ind <= context_words[1]:
                 if ind == context_words[0][1][1] or ind == context_words[0][0][1]:
                     op += '1\n'
