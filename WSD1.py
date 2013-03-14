@@ -138,6 +138,7 @@ def get_bag_of_senses(temp_words1):
             definitions.append(s.name)'''
             
     definitions = ' '.join(definitions)
+    print(definitions)
     return definitions
 
 '''
