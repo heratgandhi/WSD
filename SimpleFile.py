@@ -45,6 +45,9 @@ for line in test:
         max_i = -1
         max_cnt = 0
         
+        total_keys = len(train_dict.keys())
+        un_keys = 0
+        
         for key in train_dict.keys():
             if starting_target in key:
                 max_cnt += 1
@@ -52,18 +55,20 @@ for line in test:
                 if len(intersect_ss) > max:
                     max = len(intersect_ss)
                     max_i = key.split()[1]
+            else:
+                un_keys += 1
         
         ind = 1
         op = '0\n'
-        lineno += 1        
+        #lineno += 1        
         while ind <= max_cnt:
             if ind == int(max_i):
                 op += '1\n'
-                lineno += 1
+                #lineno += 1
             else:
                 op += '0\n'
-                lineno += 1
+                #lineno += 1
             ind += 1
         fpo.write(op)
         
-        print(max_i,max_cnt,op,lineno)
+        print(max_i,max_cnt,total_keys,un_keys,op)#,lineno)

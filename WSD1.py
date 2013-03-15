@@ -1,6 +1,6 @@
 '''
     Dictionary based WSD
-    Author: Herat Gandhi
+    Author: Herat Gandhi, Jyoti Pandey, Saikiran, Vinayaka Dattatraya
 '''
 
 import nltk
@@ -11,30 +11,38 @@ from nltk.stem.lancaster import LancasterStemmer
 import string
 import re
 
+#Read dictionary file in the memory so that we don't have to load file again and again
 dict_file = open('Dictionary.xml').read()
 
 '''
     Find Glosses from XML file
+    @param string: word for which we want to find senses
     @return: all definitions of a gloss and if word is not in XML then return -1
 '''
 def find_gloss_from_file(str):
     global dict_file
     content = dict_file
+    #Parse using regex
     l = re.compile('<lexelt item="' + str + '.[a-z]">(.*?)</lexelt>', re.DOTALL |  re.IGNORECASE).findall(content)
     if len(l) > 0 :
+        #return all the glosses
         return re.compile('gloss="(.*)"').findall(l[0])
     else:
         return -1
 
 '''
     Remove junk content that is numbers and stopwords from the string
+    @param string1: string from which we want to remove junk
+    @param lines1: lines from which we want to ignore words
+    @return: Clean string with no junk parts
 '''
 def remove_junk(string1,lines1):
+    #Regex for numbers
     string1 = re.sub('[0-9]+','',string1)
-    
+    #Remove punctuations
     for punct in string.punctuation:
         string1 = string1.replace(punct,'')
-    
+    #Remove Stopwords and unimportant words
     temp_l1 = string1.split()
     important_words1 = filter(lambda x: x not in stopwords.words('english'), temp_l1)
     important_words1 = filter(lambda x: x not in lines1, important_words1)
@@ -43,6 +51,8 @@ def remove_junk(string1,lines1):
 
 '''
     Function to find all sub-sequences from a string
+    @param s1: String for which we want to find sub-sequences
+    @return List: List of all sub-sequences of the input string 
 '''    
 def find_word_sequences(s1):
     s1l = s1.split()    
@@ -51,6 +61,7 @@ def find_word_sequences(s1):
     k = 1    
     new_s1l = []
     str = ''
+    #Iterate through string and find the subsequences of k lengths
     while k <= len(s1l):
         i = 0        
         while i < len(s1l)-k+1:
@@ -71,23 +82,30 @@ def find_word_sequences(s1):
 
 '''
     Find total overlap
+    @param s1,s2: Strings for which we want to find overlaps
+    @return total: Integer representing weighted overlap score  
 '''    
 def calculate_overall_score(s1,s2):
+    #Find sub-sequences of a string
     seq1 = find_word_sequences(s1)
     total = 0
+    #Check whether we find a sub-string in a string or not
     for elem in seq1:
         if elem in s2:
+            #if we found a match then check its length and take its square
             total += (elem.count(' ')+1) ** 2
     return total
 
 '''
     Get bag of senses for a list of words
+    @param temp_words1: Words for which we want to find bag of senses
+    @return definitions: Definitions of context words also include hypernyms and hyponyms
 '''
 def get_bag_of_senses(temp_words1):
     senses = []
     lmtzr = WordNetLemmatizer()
     temp_words1 = nltk.pos_tag(temp_words1.split())
-    
+    #Find the synsets
     for t in temp_words1:
         try:
             if 'VB' in t[1]:
@@ -95,27 +113,18 @@ def get_bag_of_senses(temp_words1):
             else:
                 senses.append(wordnet.synsets(t[0]))
         except:
-            pass    
+            pass
+    #Find hypernyms' synsets    
     hypernyms = []
     for sense_l in senses:
         for s in sense_l:
             hypernyms.append(s.hypernyms())
-    
+    #Find hyponyms' synsets
     hyponyms = []
     for sense_l in senses:
         for s in sense_l:
             hyponyms.append(s.hyponyms())
             
-    '''meronyms = []
-    for sense_l in senses:
-        for s in sense_l:
-            meronyms.append(s.part_meronyms())        
-    
-    toponyms = []
-    for sense_l in senses:
-        for s in sense_l:
-            toponyms.append(s.part_holonyms())'''
-    
     definitions = []
     for sense_l in senses:
         for s in sense_l:
@@ -129,26 +138,19 @@ def get_bag_of_senses(temp_words1):
         for s in sense_l:
             definitions.append(s.name)
     
-    '''for sense_l in meronyms:
-        for s in sense_l:
-            definitions.append(s.name)
-            
-    for sense_l in toponyms:
-        for s in sense_l:
-            definitions.append(s.name)'''
-            
     definitions = ' '.join(definitions)
-    print(definitions)
     return definitions
 
 '''
-    Get bag of senses for a list of words
+    Get bag of senses for target word
+    @param list: List of senses of a target word
+    @return string: String containing all the senses
 '''
 def get_minibag_of_senses(temp_words1):
     senses = []
     lmtzr = WordNetLemmatizer()
     temp_words1 = nltk.pos_tag(temp_words1.split())
-    
+    #Find the synsets
     for t in temp_words1:
         try:
             if 'VB' in t[1]:
@@ -157,7 +159,7 @@ def get_minibag_of_senses(temp_words1):
                 senses.append(wordnet.synsets(t[0]))
         except:
             pass    
-    
+    #Find senses
     definitions = []
     for sense_l in senses:
         for s in sense_l:
@@ -166,9 +168,16 @@ def get_minibag_of_senses(temp_words1):
     definitions = ' '.join(definitions)
     return definitions
 
+'''
+    Stemming function
+    @param string: String which we want to stem
+    @return string: String with stemmed words
+'''
 def stem_funct(str):
     res = ''
+    #Use NLTK's stemmer
     st = LancasterStemmer()
+    #Stem each word and append the result in the string
     for word in str.split(' '):
         res += ' ' + st.stem(word)
     return res
@@ -181,25 +190,21 @@ def stem_funct(str):
 '''
 def get_sense_index(line,n,lines1,target):
     temp = line.lower()
+    #Use regex to remove numbers
     temp = re.sub('[0-9]+','',temp)
     
+    #Get context and target word
     first_at = temp.find('@')
     last_at = temp.rfind('@')+1
     
     temp1 = temp[:first_at]
     temp2 = temp[last_at:]
-    
+    #Remove junk from context words
     important_words1 = remove_junk(temp1, lines1)
     important_words2 = remove_junk(temp2, lines1)
     
-    '''if len(important_words1) > n:
-        important_words1 = important_words1[len(important_words1)-n:]
-    else:
-        important_words1 = important_words1
-    important_words2 = important_words2[:n]'''
-    
     definitions = ''
-    
+    #Get senses for the context words
     definitions += ' ' + get_bag_of_senses(important_words1)
     definitions += ' ' + get_bag_of_senses(important_words2)
     
@@ -207,37 +212,39 @@ def get_sense_index(line,n,lines1,target):
     max = -1
     index = 1
     max_str = ''
+    #For all the senses find the perfect sense
     val = []    
     for s in find_gloss_from_file(target):
-        bag2 = get_minibag_of_senses(remove_junk(s.lower(), lines1))#s.lower()#get_bag_of_senses(remove_junk(s.lower(), lines1).split(' '))
-        stemmed1 = stem_funct(remove_junk(bag2, lines1))#stem_funct(remove_junk(bag2, lines1))
-        
-        stemmed2 = stem_funct(definitions)#stem_funct(definitions)
-        
+        bag2 = get_minibag_of_senses(remove_junk(s.lower(), lines1))
+        #Stem the string
+        stemmed1 = stem_funct(remove_junk(bag2, lines1))
+        #Stem the string        
+        stemmed2 = stem_funct(definitions)
+        #Find the overlapping score        
         temp_sc = calculate_overall_score(stemmed1, stemmed2) * 1.00 / len(stemmed1)
-        
+        #Append the score in the list
         val.append(temp_sc)
-        
+        #Find the maximum value
         if temp_sc > max:
             max = temp_sc
             max_str = stemmed1
             max_index = index
         
         index += 1
-    
-    print(max_index,val)
+    #Return the length and sense indexe/s
     return [max_index,len(find_gloss_from_file(target))]
 
 '''
     Function to perform WSD based on dictionaries
     @param filename: Filename to be used for testing
+    Writes output to output.txt
 '''
 def WSD_Dict(filename):
-    fp = open(filename,'r')
-    lines = fp.readlines()
-    fp2 = open('words.txt','r')
-    lines1 = fp2.read().splitlines()
-    fpo = open('output.txt','w')
+    fp = open(filename,'r') #Open file for reading
+    lines = fp.readlines() #Get lines
+    fp2 = open('words.txt','r') #Open words from which we ignore unimportant words
+    lines1 = fp2.read().splitlines() #Lines from unimportant file
+    fpo = open('output.txt','w') #Output file
     
     for line in lines:
         at_p = line.find('@') #Find first occurance of @ that helps to identify where to break string
@@ -247,8 +254,8 @@ def WSD_Dict(filename):
         line = line[at_p+1:] #Get rest of the line
         target_in_sentence = line[line.find('@')+1:line.rfind('@')] #Target word in the sentence
         
-        context_words = get_sense_index(line,3,lines1,strating_target)
-        if context_words[0] != -1:
+        context_words = get_sense_index(line,10,lines1,strating_target) #Get sense from the context
+        if context_words[0] != -1: #If -1 is returned then we have multiple sense predictions
             ind = 1
             op = '0\n'        
             while ind <= context_words[1]:
@@ -264,7 +271,7 @@ def WSD_Dict(filename):
             while ind <= context_words[1]:
                 op += '0\n'
                 ind += 1
-            fpo.write(op)
+            fpo.write(op) #Write binary string to the file
     
 def main():
     filename = raw_input('Enter file name to test: ')
