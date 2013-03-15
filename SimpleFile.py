@@ -33,6 +33,18 @@ test = open('test.data').read().splitlines()
 fpo = open('output.txt','w')
 lineno = 0
 
+dict_file = open('Dictionary.xml').read()
+def find_gloss_from_file(str):
+    global dict_file
+    content = dict_file
+    #Parse using regex
+    l = re.compile('<lexelt item="' + str + '.[a-z]">(.*?)</lexelt>', re.DOTALL |  re.IGNORECASE).findall(content)
+    if len(l) > 0 :
+        #return all the glosses
+        return re.compile('gloss="(.*)"').findall(l[0])
+    else:
+        return -1
+
 for line in test:
         at_p = line.find('@') #Find first occurance of @ that helps to identify where to break string
         starting = line [:at_p].split()
@@ -45,9 +57,6 @@ for line in test:
         max_i = -1
         max_cnt = 0
         
-        total_keys = len(train_dict.keys())
-        un_keys = 0
-        
         for key in train_dict.keys():
             if starting_target in key:
                 max_cnt += 1
@@ -55,20 +64,15 @@ for line in test:
                 if len(intersect_ss) > max:
                     max = len(intersect_ss)
                     max_i = key.split()[1]
-            else:
-                un_keys += 1
-        
+            
         ind = 1
         op = '0\n'
-        #lineno += 1        
-        while ind <= max_cnt:
+        while ind <= len(find_gloss_from_file(starting_target)):
             if ind == int(max_i):
                 op += '1\n'
-                #lineno += 1
             else:
                 op += '0\n'
-                #lineno += 1
             ind += 1
         fpo.write(op)
         
-        print(max_i,max_cnt,total_keys,un_keys,op)#,lineno)
+        print(max_i,max_cnt)
